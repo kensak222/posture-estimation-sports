@@ -28,37 +28,45 @@ class PoseEstimator extends Estimator {
     final resizedImage = img.copyResize(
         image, width: 257, height: 257,
     );
+    // 入力データ用の Float32List を作成
     Float32List input = Float32List(257 * 257 * 3);
     for (int i = 0; i < 257; i++) {
       for (int j = 0; j < 257; j++) {
         // 画像のピクセル値を取得
         final pixel = resizedImage.getPixel(j, i);
 
-        // ビットシフトを使用して各色成分を抽出
-        // r = pixel >> 24 で最上位8ビット（赤色の部分）を取り出し、& 0xFF で
-        // 下位8ビットを切り捨てることで赤色成分 r が 0 〜 255 の範囲で取得できる
-        // final r = (pixel >> 24) & 0xFF;  // 赤 (Red) 成分 (上位8ビット)
-        // final g = (pixel >> 16) & 0xFF;  // 緑 (Green) 成分 (次の8ビット)
-        // final b = (pixel >> 8) & 0xFF;   // 青 (Blue) 成分 (次の8ビット)
+        // ピクセル値 (r, g, b)から各色成分を取り出し、0-255 の範囲を 0-1 の範囲に正規化
+        final rNormalized = pixel[0] / 255.0;
+        final gNormalized = pixel[1] / 255.0;
+        final bNormalized = pixel[2] / 255.0;
+        input[(i * 257 + j) * 3 + 0] = rNormalized;  // 赤色チャネル
+        input[(i * 257 + j) * 3 + 1] = gNormalized;  // 緑色チャネル
+        input[(i * 257 + j) * 3 + 2] = bNormalized;  // 青色チャネル
 
-        // 各色成分を取り出す
-        final r = pixel.r;  // 赤
-        final g = pixel.g;  // 緑
-        final b = pixel.b;  // 青
-
-        // それぞれの色成分を 0-1 の範囲に正規化
-        input[(i * 257 + j) * 3 + 0] = r / 255.0;  // 赤色チャネル
-        input[(i * 257 + j) * 3 + 1] = g / 255.0;  // 緑色チャネル
-        input[(i * 257 + j) * 3 + 2] = b / 255.0;  // 青色チャネル
+        if (i < 10 && j < 5) {
+          Utils.debugPrint(
+              'r: $rNormalized, g: $gNormalized, b: $bNormalized');
+        }
       }
     }
 
+    Utils.debugPrint('データ入力済みの Float32List inout = $input');
     // モデルの入力データと出力データを指定
-    final output = List.generate(1, (_) =>
-        List.generate(17, (_) => List.generate(3, (_) => 0.0)));
+    final output = List.generate(
+        1, (_) => List.generate(17, (_) => List.generate(3, (_) => 0.0))
+    );
 
     // 推論実行
     _interpreter?.run(input, output);
+
+    // x座標とy座標が画像の範囲内にあるか、信頼度が0から1の範囲にあるかを確認
+    for (var i = 0; i < 17; i++) {
+      Utils.debugPrint(
+          "Pose $i: x = ${output[0][i][0]}, " // x座標
+              "y = ${output[0][i][1]}, " // y座標
+              "confidence = ${output[0][i][2]}" // 信頼度
+      );
+    }
 
     return output;
   }
@@ -74,6 +82,7 @@ class PoseEstimator extends Estimator {
   // メモリ解放
   @override
   void close() {
+    Utils.debugPrint('_interpreter のメモリを解放します');
     _interpreter?.close();
   }
 }

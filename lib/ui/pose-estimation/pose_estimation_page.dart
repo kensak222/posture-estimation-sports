@@ -19,11 +19,14 @@ class PoseEstimationPage extends StatefulWidget {
 class _PoseEstimationPageState extends State<PoseEstimationPage> {
 
   final List<img.Image> _estimatedImages = List.empty(growable: true);
+  late PoseEstimator _poseEstimator;
 
   @override
   void initState() {
     Utils.debugPrint('_PoseEstimationPageState#initState が呼ばれました');
     super.initState();
+    _poseEstimator = PoseEstimator();
+    _poseEstimator.loadModel();
   }
 
   @override
@@ -31,21 +34,21 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
     Utils.debugPrint('_PoseEstimationPageState#build が呼ばれました');
     Utils.debugPrint('frames size = ${widget.frames.length}');
     Utils.debugPrint('frames = ${widget.frames}');
-    final poseEstimator = PoseEstimator();
-    poseEstimator.loadModel();
+
     if (widget.frames.length != _estimatedImages.length) {
       widget.frames.forEach((frame) async {
         Utils.debugPrint('姿勢推定を実行します');
         final image = img.decodeImage(frame.readAsBytesSync())!;
         // 姿勢推定を実行
-        final poseData = await poseEstimator.estimatePose(image);
-        final overlayImage = poseEstimator
+        final poseData = await _poseEstimator.estimatePose(image);
+        final overlayImage = _poseEstimator
             .overlayPoseOnImage(image, poseData);
         setState(() {
-          // _estimatedImages.add(type.Uint8List.fromList(img.encodePng(overlayImage)));
           _estimatedImages.add(overlayImage);
         });
       });
+    } else {
+      _poseEstimator.close();
     }
 
     return Scaffold(
