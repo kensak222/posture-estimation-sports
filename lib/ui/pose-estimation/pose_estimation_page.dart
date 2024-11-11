@@ -46,9 +46,12 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
         final poseData = await _poseEstimator.estimatePose(image);
         final overlayImage = await _poseEstimator
             .drawPoseOnImage(image, poseData);
-        setState(() {
-          _estimatedImages.add(overlayImage);
-        });
+        _estimatedImages.add(overlayImage);
+        if (widget.frames.length == _estimatedImages.length) {
+          setState(() {
+            _estimatedImages;
+          });
+        }
       });
     } else {
       _poseEstimator.close();
