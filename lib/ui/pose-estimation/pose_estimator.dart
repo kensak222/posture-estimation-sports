@@ -87,6 +87,7 @@ class PoseEstimator extends Estimator {
     return output;
   }
 
+  // 姿勢推定結果を画像に反映
   Future<img.Image> drawPoseOnImage(
       img.Image image,
       List<List<List<List<double>>>> poseKeyPoints,
@@ -105,12 +106,13 @@ class PoseEstimator extends Estimator {
       if (confidence > _confidenceThreshold) {
         // 赤色で関節を描画
         imageResult = img.drawCircle(
-            image, x: x, y: y, radius: 5, color: img.ColorInt16.rgb(255, 0, 0),
+            image, x: x, y: y, radius: 8, // radiusで関節円の大きさを調節
+          color: img.ColorRgba8(255, 0, 0, 255),
         ); // 赤色
       }
     }
 
-    // 接続線を描画（関節のペアをつなぐ）
+    // 関節間の接続線を描画（関節のペアをつなぐ）
     for (var connection in poseConnections) {
       final pointA = frameKeyPoints[connection[0]];  // 親関節
       final pointB = frameKeyPoints[connection[1]];  // 子関節
@@ -123,35 +125,24 @@ class PoseEstimator extends Estimator {
       // 確信度がしきい値を超えていれば接続線を描画
       if (pointA[2] > _confidenceThreshold && pointB[2] > _confidenceThreshold) {
         // 緑色で接続線を描画
-        imageResult = img.drawLine(
-            imageResult, x1: x1, y1: y1, x2: x2, y2: y2,
-            color: img.ColorInt16.rgb(0, 255, 0),
-        ); // 緑色
+        // 線を太くして見やすくするために複数回描画
+        for (int i = -2; i <= 2; i++) {
+          for (int j = -2; j <= 2; j++) {
+            // 線の座標を微調整して、太い線を描画
+            imageResult = img.drawLine(
+              imageResult,
+              x1: x1 + i,
+              y1: y1 + j,
+              x2: x2 + i,
+              y2: y2 + j,
+              color: img.ColorRgba8(0, 255, 0, 255), // 緑色
+            );
+          }
+        }
       }
     }
 
     return imageResult;
-  }
-
-  Future<img.Image> overlayPoseOnImage(
-      img.Image originalImage,
-      img.Image poseImage,
-      ) async {
-    // 元画像に姿勢推定画像を重ね合わせる
-    final width = originalImage.width;
-    final height = originalImage.height;
-
-    // 新しい画像を作成
-    img.Image result = img.Image(width: width,height: height);
-    // result.fill(img.ColorInt16.rgb(255, 255, 255)); // 白背景で初期化
-
-    // 元の画像をコピー
-    img.copyImageChannels(from: result, originalImage);
-
-    // 姿勢推定結果（poseImage）を上に重ねる
-    img.copyImageChannels(from: result, poseImage, scaled: true);  // 重ね合わせる（透明度などを考慮）
-
-    return result;
   }
 
   // メモリ解放
