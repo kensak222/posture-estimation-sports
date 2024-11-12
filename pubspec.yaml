@@ -79,6 +79,8 @@ flutter:
 
   assets:
     - assets/ai-model/posenet_mobilenet_v1_100_257x257_multi_kpt_stripped.tflite
+    - assets/ai-model/move_net_lightning_fp16.tflite
+    - assets/ai-model/move_net_thunder_int8.tflite
     - assets/ai-model/move_net_thunder_fp16.tflite
 
   # To add custom fonts to your application, add a fonts section here,
