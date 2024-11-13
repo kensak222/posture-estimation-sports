@@ -82,6 +82,7 @@ flutter:
     - assets/ai-model/move_net_lightning_fp16.tflite
     - assets/ai-model/move_net_thunder_int8.tflite
     - assets/ai-model/move_net_thunder_fp16.tflite
+    - assets/ai-model/gold_yolo_n_body_head_hand_post_0461_0.4428_1x3x640x640_integer_quant.tflite
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
