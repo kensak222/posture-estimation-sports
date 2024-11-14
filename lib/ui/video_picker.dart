@@ -11,10 +11,10 @@ class VideoPicker {
     final picker = ImagePicker();
     final video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
-      Utils.debugPrint('videoPath の取得に成功しました');
+      dPrint('videoPath の取得に成功しました');
       return video.path;
     }
-    Utils.debugPrint('videoPath の取得に失敗しました');
+    dPrint('videoPath の取得に失敗しました');
     return null;
   }
 
@@ -32,13 +32,13 @@ class VideoPicker {
     // コマンド実行の結果をチェック
     final returnCode = await session.getReturnCode();
     if (returnCode?.isValueSuccess() == true) {
-      Utils.debugPrint('フレーム抽出に成功しました');
+      dPrint('フレーム抽出に成功しました');
       // 生成された画像ファイルをリストで取得
       final frameFiles = Directory(outputDir)
           .listSync().whereType<File>().toList();
       return frameFiles;
     } else {
-      Utils.debugPrint('フレーム抽出に失敗しました');
+      dPrint('フレーム抽出に失敗しました');
       return List.empty();
     }
   }
