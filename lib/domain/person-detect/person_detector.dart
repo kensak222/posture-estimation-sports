@@ -98,7 +98,7 @@ class PersonDetector {
     List<DetectedObject> detectedObjects = [];
     for (var i = 0; i < output.length; i++) {
       final data = output[i];
-      if (i % 5 == 0) dPrint('No.$i : $data');
+      // if (i % 5 == 0) dPrint('No.$i : $data');
 
       final classId = data[0].toInt();
       final score = data[4]; // confidenceスコア
@@ -112,16 +112,22 @@ class PersonDetector {
         int yMax = (data[5] * imageHeight).clamp(0.0, imageHeight.toDouble()).toInt();
 
         // バウンディングボックスが画像の範囲内に収まるように調整
-        if (xMin < 0) xMin = 0;
-        if (yMin < 0) yMin = 0;
-        if (xMax > imageWidth) xMax = imageWidth;
-        if (yMax > imageHeight) yMax = imageHeight;
+        // xMin = xMin.clamp(0, imageWidth - 1);
+        // yMin = yMin.clamp(0, imageHeight - 1);
+        // xMax = xMax.clamp(0, imageWidth - 1);
+        // yMax = yMax.clamp(0, imageHeight - 1);
 
-        detectedObjects.add(DetectedObject(
-          classId: classId,
-          score: score,
-          boundingBox: [xMin, yMin, xMax, yMax],
-        ));
+        // バウンディングボックスが有効な範囲かどうかチェック
+        if (xMin < xMax && yMin < yMax) {
+          dPrint("有効なバウンディングボックス: [$xMin, $yMin, $xMax, $yMax]");
+          detectedObjects.add(DetectedObject(
+            classId: classId,
+            score: score,
+            boundingBox: [xMin, yMin, xMax, yMax],
+          ));
+        } else {
+          dPrint("無効なバウンディングボックス: [$xMin, $yMin, $xMax, $yMax]");
+        }
       }
     }
 
