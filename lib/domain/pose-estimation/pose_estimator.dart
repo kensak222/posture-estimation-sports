@@ -37,8 +37,7 @@ class PoseEstimator extends Estimator {
   bool isInterpreterNull() => _interpreter == null;
 
   @override
-  Future<List<List<List<List<double>>>>> estimatePose(img.Image image)
-  async {
+  Future<List<List<List<List<double>>>>> estimatePose(img.Image image) async {
     Utils.debugPrint('画像を正規化します');
 
     // 画像をモデルに合わせたサイズにリサイズ (256x256に変更)
@@ -85,6 +84,48 @@ class PoseEstimator extends Estimator {
               "y = ${output[0][0][i][1]}, " // y座標
               "confidence = ${output[0][0][i][2]}" // 信頼度
       );
+    }
+
+    return output;
+  }
+
+  // ROI部分を使って姿勢推定
+  Future<List<List<List<List<double>>>>> estimatePoseRoi(
+      img.Image image, List<int> roi,
+      ) async {
+    // ROIで画像をクロップ
+    img.Image croppedImage = img.copyCrop(
+        image, x: roi[0],
+        y: roi[1],
+        width: roi[2] - roi[0],
+        height: roi[3] - roi[1],
+    );
+
+    // 画像をモデルに合わせたサイズにリサイズ (256x256に変更)
+    final resizedImage = img.copyResize(croppedImage, width: 256, height: 256);
+
+    // 画像のRGB値を取得
+    final imageBytes = resizedImage.getBytes();
+
+    // 正規化処理
+    final inputTensor = Uint8List(256 * 256 * 3);
+    for (int i = 0; i < imageBytes.length; i++) {
+      inputTensor[i] = imageBytes[i];
+    }
+
+    final reshapedInput = inputTensor.reshape([1, 256, 256, 3]);
+
+    final output = List.generate(1, (_) =>
+        List.generate(1, (_) =>
+            List.generate(17, (_) =>
+                List.filled(3, 0.0)))
+    );
+
+    // 推論実行
+    try {
+      _interpreter?.run(reshapedInput, output);
+    } catch (e) {
+      Utils.debugPrint('推論実行中にエラーが発生しました: $e');
     }
 
     return output;
