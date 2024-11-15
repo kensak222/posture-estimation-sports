@@ -9,7 +9,7 @@ import 'detected_object.dart';
 
 class PersonDetector {
   Interpreter? _interpreter;
-  final _confidenceThreshold = 0.5;
+  final _confidenceThreshold = 0.35;
 
   PersonDetector() {
     loadModel();
@@ -19,8 +19,9 @@ class PersonDetector {
     dPrint('_interpreter を初期化します');
     // YOLOv5のTensorFlow Liteモデルをロード
     final interpreterOptions = InterpreterOptions();
+    interpreterOptions.useNnApiForAndroid = true;
     _interpreter = await Interpreter.fromAsset(
-      'assets/ai-model/gold_yolo_n_body_head_hand_post_0461_0.4428_1x3x640x640_integer_quant.tflite',
+      'assets/ai-model/yolov5x-fp16.tflite',
       options: interpreterOptions,
     );
   }
@@ -31,12 +32,18 @@ class PersonDetector {
   Future<List<DetectedObject>> detectObjects(img.Image image) async {
     dPrint('物体検出を開始します');
 
-    final resizedImage = img.copyResize(image, width: 640, height: 640);
+    final resizedImage = img.copyResize(
+        image, width: 640,
+        height: 640,
+        // fit: img.BoxFit.contain,
+    );
     final inputTensor = _prepareInput(resizedImage);
 
-    // 出力テンソルを生成
-    final output = List.generate(60, (_) => List.filled(7, 0.0));
+    // 出力テンソルを生成 (YOLOv5nの出力サイズに合わせる)
+    final output = List.generate(
+        1, (_) => List.generate(25200, (_) => List.filled(85, 0.0)));
 
+    // 推論実行
     _interpreter?.run(inputTensor, output);
     dPrint('output : $output');
     dPrint('物体検出を完了しました');
@@ -44,7 +51,7 @@ class PersonDetector {
     // 出力結果をパースしてDetectedObjectをリスト化
     final detectedObjects = _parseOutput(output, image);
     detectedObjects.indexedMap((int i, DetectedObject obj) {
-      ('Index: $i Value: ${obj.toString()}');
+      dPrint('Index: $i Value: ${obj.toString()}');
     });
     dPrint('detectedObjects : $detectedObjects');
 
@@ -67,13 +74,12 @@ class PersonDetector {
     }
 
     // 1x640x640x3 の 4次元テンソルとしてデータをセット
-    final inputTensor = List.generate(1, (_) =>
-        List.generate(640, (_) =>
-            List.generate(640, (_) =>
-                List.filled(3, 0.0)  // RGBカラー
-            )
-        )
-    );
+    final inputTensor = List.generate(
+        1,
+        (_) => List.generate(
+            640,
+            (_) => List.generate(640, (_) => List.filled(3, 0.0) // RGBカラー
+                )));
 
     // Float32List からテンソルにデータをセット
     int index = 0;
@@ -89,44 +95,42 @@ class PersonDetector {
     return inputTensor;
   }
 
+  // YOLOv5nの出力をパースして物体を抽出
   List<DetectedObject> _parseOutput(
-      List<List<double>> output, img.Image image,
-      ) {
+    List<List<List<double>>> output,
+    img.Image image,
+  ) {
+    dPrint('物体を抽出します');
+
     final imageWidth = image.width;
     final imageHeight = image.height;
-
     List<DetectedObject> detectedObjects = [];
-    for (var i = 0; i < output.length; i++) {
-      final data = output[i];
-      // if (i % 5 == 0) dPrint('No.$i : $data');
 
-      final classId = data[0].toInt();
-      final score = data[4]; // confidenceスコア
+    for (var i = 0; i < output[0].length; i++) {
+      final obj = output[0][i];
+      if (i % 8000 == 0) dPrint('obj : $obj');
 
-      // スコアが閾値を超える場合のみ結果を追加
-      if (score > _confidenceThreshold) {
-        // バウンディングボックスの座標をスケーリング
-        int xMin = (data[1] * imageWidth).clamp(0.0, imageWidth.toDouble()).toInt();
-        int yMin = (data[2] * imageHeight).clamp(0.0, imageHeight.toDouble()).toInt();
-        int xMax = (data[3] * imageWidth).clamp(0.0, imageWidth.toDouble()).toInt();
-        int yMax = (data[5] * imageHeight).clamp(0.0, imageHeight.toDouble()).toInt();
+      final x = obj[0]; // x座標
+      final y = obj[1]; // y座標
+      final width = obj[2]; // 幅
+      final height = obj[3]; // 高さ
+      final confidence = obj[4]; // 信頼度
+      final classId = obj[5].toInt(); // クラスID
 
-        // バウンディングボックスが画像の範囲内に収まるように調整
-        // xMin = xMin.clamp(0, imageWidth - 1);
-        // yMin = yMin.clamp(0, imageHeight - 1);
-        // xMax = xMax.clamp(0, imageWidth - 1);
-        // yMax = yMax.clamp(0, imageHeight - 1);
+      if (confidence > _confidenceThreshold) {
+        // スケーリングして画像上の座標に変換
+        int xMin = (x * imageWidth).toInt();
+        int yMin = (y * imageHeight).toInt();
+        int xMax = ((x + width) * imageWidth).toInt();
+        int yMax = ((y + height) * imageHeight).toInt();
 
-        // バウンディングボックスが有効な範囲かどうかチェック
+        // バウンディングボックスが有効かどうかをチェック
         if (xMin < xMax && yMin < yMax) {
-          dPrint("有効なバウンディングボックス: [$xMin, $yMin, $xMax, $yMax]");
           detectedObjects.add(DetectedObject(
             classId: classId,
-            score: score,
+            score: confidence,
             boundingBox: [xMin, yMin, xMax, yMax],
           ));
-        } else {
-          dPrint("無効なバウンディングボックス: [$xMin, $yMin, $xMax, $yMax]");
         }
       }
     }
@@ -141,28 +145,17 @@ class PersonDetector {
     final yMin = bBox[1];
     final xMax = bBox[2];
     final yMax = bBox[3];
-    dPrint('xMin : $xMin , yMin : $yMin , xMax : $xMax , yMax : $yMax',);
+    dPrint('クロッピング結果を出力します '
+        'xMin : $xMin , yMin : $yMin ,'
+        ' width : ${xMax - xMin} , height : ${yMax - yMin}');
 
-    // クロップ座標が画像内に収まっているかチェック
-    final safeXMin = xMin.clamp(0, image.width - 1);  // 座標が画像の範囲内に収まるように調整
-    final safeYMin = yMin.clamp(0, image.height - 1);
-    final safeXMax = xMax.clamp(0, image.width - 1);
-    final safeYMax = yMax.clamp(0, image.height - 1);
-    dPrint('safeXMin : $safeXMin , safeYMin : $safeXMax ,'
-        ' safeXMax : $xMax , safeYMax : $safeYMax');
-
-    if (safeXMin == safeXMax || safeYMin == safeYMax) {
-      dPrint('クロッピングに失敗しました : クロップ範囲が無効');
-      return img.Image(width: 640, height: 640,);  // 仮の画像を返す
-    }
-    dPrint('クロッピングに成功しました');
-
+    // バウンディングボックス内の領域を切り出して返す
     return img.copyCrop(
       image,
-      x: safeXMin,
-      y: safeYMin,
-      width: safeXMax - safeXMin,
-      height: safeYMax - safeYMin,
+      x: xMin,
+      y: yMin,
+      width: xMax - xMin,
+      height: yMax - yMin,
     );
   }
 

@@ -8,6 +8,7 @@ import 'estimator.dart';
 
 class PoseEstimator extends Estimator {
   Interpreter? _interpreter;
+
   // MoveNetの関節の接続情報（親子関係）
   final List<List<int>> poseConnections = [
     [0, 1], [1, 2], [2, 3], // 左腕
@@ -17,7 +18,7 @@ class PoseEstimator extends Estimator {
     [0, 13], [13, 14], // 首
     [13, 15], [15, 16], // 顔
   ];
-  final _confidenceThreshold = 0.42;
+  final _confidenceThreshold = 0.45;
 
   PoseEstimator() {
     loadModel();
@@ -29,8 +30,8 @@ class PoseEstimator extends Estimator {
     final interpreterOptions = InterpreterOptions();
     interpreterOptions.useNnApiForAndroid = false;
     _interpreter = await Interpreter.fromAsset(
-        'assets/ai-model/move_net_thunder_fp16.tflite',
-        options: interpreterOptions,
+      'assets/ai-model/move_net_thunder_fp16.tflite',
+      options: interpreterOptions,
     );
   }
 
@@ -44,7 +45,7 @@ class PoseEstimator extends Estimator {
       throw Exception('画像の読み込みに失敗しました。空の画像です。');
     } else {
       dPrint(
-          '画像読み込み成功: width=${image.width}, height=${image.height}',
+        '画像読み込み成功: width=${image.width}, height=${image.height}',
       );
     }
     // 画像をモデルに合わせたサイズにリサイズ (256x256に変更)
@@ -59,7 +60,7 @@ class PoseEstimator extends Estimator {
     final inputTensor = Uint8List(256 * 256 * 3);
     for (int i = 0; i < imageBytes.length; i++) {
       // 画像のピクセルを[0, 255]の範囲に保持し、整数型 (uint8) に変換
-      inputTensor[i] = imageBytes[i];  // ここでimageBytes[i]の値をそのまま使用
+      inputTensor[i] = imageBytes[i]; // ここでimageBytes[i]の値をそのまま使用
     }
 
     // 入力データを[1, 256, 256, 3]の4次元テンソルに変換
@@ -72,11 +73,10 @@ class PoseEstimator extends Estimator {
     dPrint("Output Shape: $outputShape");
 
     // 出力テンソルを準備
-    final output = List.generate(1, (_) =>
-        List.generate(1, (_) =>
-            List.generate(17, (_) =>
-                List.filled(3, 0.0)))
-    );
+    final output = List.generate(
+        1,
+        (_) => List.generate(
+            1, (_) => List.generate(17, (_) => List.filled(3, 0.0))));
 
     // 推論実行
     try {
@@ -87,11 +87,10 @@ class PoseEstimator extends Estimator {
 
     // 各関節位置を表示
     for (var i = 0; i < 17; i++) {
-      dPrint(
-          "Pose $i: x = ${output[0][0][i][0]}, " // x座標
-              "y = ${output[0][0][i][1]}, " // y座標
-              "confidence = ${output[0][0][i][2]}" // 信頼度
-      );
+      dPrint("Pose $i: x = ${output[0][0][i][0]}, " // x座標
+          "y = ${output[0][0][i][1]}, " // y座標
+          "confidence = ${output[0][0][i][2]}" // 信頼度
+          );
     }
 
     return output;
@@ -99,14 +98,16 @@ class PoseEstimator extends Estimator {
 
   // ROI部分を使って姿勢推定
   Future<List<List<List<List<double>>>>> estimatePoseRoi(
-      img.Image image, List<int> roi,
-      ) async {
+    img.Image image,
+    List<int> roi,
+  ) async {
     // ROIで画像をクロップ
     img.Image croppedImage = img.copyCrop(
-        image, x: roi[0],
-        y: roi[1],
-        width: roi[2] - roi[0],
-        height: roi[3] - roi[1],
+      image,
+      x: roi[0],
+      y: roi[1],
+      width: roi[2] - roi[0],
+      height: roi[3] - roi[1],
     );
 
     // 画像をモデルに合わせたサイズにリサイズ (256x256に変更)
@@ -123,11 +124,10 @@ class PoseEstimator extends Estimator {
 
     final reshapedInput = inputTensor.reshape([1, 256, 256, 3]);
 
-    final output = List.generate(1, (_) =>
-        List.generate(1, (_) =>
-            List.generate(17, (_) =>
-                List.filled(3, 0.0)))
-    );
+    final output = List.generate(
+        1,
+        (_) => List.generate(
+            1, (_) => List.generate(17, (_) => List.filled(3, 0.0))));
 
     // 推論実行
     try {
@@ -141,17 +141,17 @@ class PoseEstimator extends Estimator {
 
   // 姿勢推定結果を画像に反映
   Future<img.Image> drawPoseOnImage(
-      img.Image image,
-      List<List<List<List<double>>>> poseKeyPoints,
-      ) async {
+    img.Image image,
+    List<List<List<List<double>>>> poseKeyPoints,
+  ) async {
     var imageResult = image;
-    final frameKeyPoints = poseKeyPoints[0][0];  // 最初のフレームの姿勢推定結果
+    final frameKeyPoints = poseKeyPoints[0][0]; // 最初のフレームの姿勢推定結果
 
     // 各関節位置を描画
     for (var i = 0; i < 17; i++) {
-      final x = (frameKeyPoints[i][0] * image.width).toInt();  // x座標
+      final x = (frameKeyPoints[i][0] * image.width).toInt(); // x座標
       final y = (frameKeyPoints[i][1] * image.height).toInt(); // y座標
-      final confidence = frameKeyPoints[i][2];  // 信頼度
+      final confidence = frameKeyPoints[i][2]; // 信頼度
 
       // 確信度がしきい値を超えていれば関節を描画
       if (confidence > _confidenceThreshold) {
@@ -165,8 +165,8 @@ class PoseEstimator extends Estimator {
 
     // 関節間の接続線を描画（関節のペアをつなぐ）
     for (var connection in poseConnections) {
-      final pointA = frameKeyPoints[connection[0]];  // 親関節
-      final pointB = frameKeyPoints[connection[1]];  // 子関節
+      final pointA = frameKeyPoints[connection[0]]; // 親関節
+      final pointB = frameKeyPoints[connection[1]]; // 子関節
 
       final x1 = (pointA[0] * image.width).toInt();
       final y1 = (pointA[1] * image.height).toInt();
@@ -174,7 +174,8 @@ class PoseEstimator extends Estimator {
       final y2 = (pointB[1] * image.height).toInt();
 
       // 確信度がしきい値を超えていれば接続線を描画
-      if (pointA[2] > _confidenceThreshold && pointB[2] > _confidenceThreshold) {
+      if (pointA[2] > _confidenceThreshold &&
+          pointB[2] > _confidenceThreshold) {
         // 緑色で接続線を描画
         // 線を太くして見やすくするために複数回描画
         for (int i = -2; i <= 2; i++) {
