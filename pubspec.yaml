@@ -41,6 +41,7 @@ dependencies:
   path_provider: ^2.1.5
   image: ^4.3.0
   go_router: ^14.4.1
+  logger: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -84,7 +85,6 @@ flutter:
     - assets/ai-model/move_net_thunder_fp16.tflite
     - assets/ai-model/yolov5n-fp16.tflite
     - assets/ai-model/yolov5l-fp16.tflite
-    - assets/ai-model/yolov5x-fp16.tflite
     - assets/ai-model/gold_yolo_n_body_head_hand_post_0461_0.4428_1x3x640x640_integer_quant.tflite
 
   # To add custom fonts to your application, add a fonts section here,

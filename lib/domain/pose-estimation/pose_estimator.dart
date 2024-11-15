@@ -26,7 +26,7 @@ class PoseEstimator extends Estimator {
 
   @override
   Future<void> loadModel() async {
-    dPrint('_interpreter を初期化します');
+    logger.d('_interpreter を初期化します');
     final interpreterOptions = InterpreterOptions();
     interpreterOptions.useNnApiForAndroid = false;
     _interpreter = await Interpreter.fromAsset(
@@ -39,12 +39,12 @@ class PoseEstimator extends Estimator {
 
   @override
   Future<List<List<List<List<double>>>>> estimatePose(img.Image image) async {
-    dPrint('姿勢推定を実行します');
+    logger.d('姿勢推定を実行します');
 
     if (image.width == 0 || image.height == 0) {
       throw Exception('画像の読み込みに失敗しました。空の画像です。');
     } else {
-      dPrint(
+      logger.d(
         '画像読み込み成功: width=${image.width}, height=${image.height}',
       );
     }
@@ -54,7 +54,7 @@ class PoseEstimator extends Estimator {
     // 画像のRGB値を取得
     final imageBytes = resizedImage.getBytes();
 
-    dPrint('画像を正規化します');
+    logger.d('画像を正規化します');
     // 正規化処理: [0, 255]の範囲のピクセル値を[0.0, 1.0]に正規化
     // ここで、0〜255の範囲に正規化した整数を使う必要があります。
     final inputTensor = Uint8List(256 * 256 * 3);
@@ -69,8 +69,8 @@ class PoseEstimator extends Estimator {
     // 入力テンソルと出力テンソルの形状をデバッグ表示
     final inputShape = _interpreter?.getInputTensor(0).shape;
     final outputShape = _interpreter?.getOutputTensor(0).shape;
-    dPrint("Input Shape: $inputShape");
-    dPrint("Output Shape: $outputShape");
+    logger.d("Input Shape: $inputShape");
+    logger.d("Output Shape: $outputShape");
 
     // 出力テンソルを準備
     final output = List.generate(
@@ -82,12 +82,12 @@ class PoseEstimator extends Estimator {
     try {
       _interpreter?.run(reshapedInput, output);
     } catch (e) {
-      dPrint('推論実行中にエラーが発生しました: $e');
+      logger.d('推論実行中にエラーが発生しました: $e');
     }
 
     // 各関節位置を表示
     for (var i = 0; i < 17; i++) {
-      dPrint("Pose $i: x = ${output[0][0][i][0]}, " // x座標
+      logger.d("Pose $i: x = ${output[0][0][i][0]}, " // x座標
           "y = ${output[0][0][i][1]}, " // y座標
           "confidence = ${output[0][0][i][2]}" // 信頼度
           );
@@ -133,7 +133,7 @@ class PoseEstimator extends Estimator {
     try {
       _interpreter?.run(reshapedInput, output);
     } catch (e) {
-      dPrint('推論実行中にエラーが発生しました: $e');
+      logger.d('推論実行中にエラーが発生しました: $e');
     }
 
     return output;
@@ -200,7 +200,7 @@ class PoseEstimator extends Estimator {
   // メモリ解放
   @override
   void close() {
-    dPrint('_interpreter のメモリを解放します');
+    logger.d('_interpreter のメモリを解放します');
     _interpreter?.close();
   }
 }

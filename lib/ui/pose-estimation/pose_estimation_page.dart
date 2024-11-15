@@ -25,9 +25,9 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
 
   @override
   void initState() {
-    dPrint('_PoseEstimationPageState#initState が呼ばれました');
-    dPrint('frames size = ${widget.frames.length}');
-    dPrint('frames = ${widget.frames}');
+    logger.d('_PoseEstimationPageState#initState が呼ばれました');
+    logger.d('frames size = ${widget.frames.length}');
+    logger.d('frames = ${widget.frames}');
     super.initState();
     _poseEstimator = PoseEstimator();
     _personDetector = PersonDetector();
@@ -35,7 +35,7 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
 
   @override
   Widget build(BuildContext context) {
-    dPrint('_PoseEstimationPageState#build が呼ばれました');
+    logger.d('_PoseEstimationPageState#build が呼ばれました');
 
     if (!_isFinish) {
       widget.frames.indexedMap((int i, File frame) async {
@@ -50,7 +50,7 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
         debugPrint('$i回目の推論を行います');
         final image = img.decodeImage(frame.readAsBytesSync())!;
         // YOLOで物体検出
-        final detectedObjects = await _personDetector.detectObjects(image);
+        final detectedObjects = await _personDetector.detectPersons(image);
 
         // 検出結果に基づいてROIクロッピング
         // final detectedObject = detectedObjects[0];
@@ -77,15 +77,15 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
         );
 
         if (_estimatedImages.isNotEmpty && i == widget.frames.length - 1) {
-          dPrint(
+          logger.d(
               '_estimatedImages size = ${_estimatedImages.length.toString()}');
-          dPrint('_estimatedImages : $_estimatedImages');
+          logger.d('_estimatedImages : $_estimatedImages');
           setState(() {
             _estimatedImages;
             _isFinish = true;
           });
         } else {
-          dPrint('_estimatedImages が空です');
+          logger.d('_estimatedImages が空です');
         }
       });
     } else {
