@@ -25,6 +25,8 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
   @override
   void initState() {
     dPrint('_PoseEstimationPageState#initState が呼ばれました');
+    dPrint('frames size = ${widget.frames.length}');
+    dPrint('frames = ${widget.frames}');
     super.initState();
     _poseEstimator = PoseEstimator();
     _personDetector = PersonDetector();
@@ -33,8 +35,6 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
   @override
   Widget build(BuildContext context) {
     dPrint('_PoseEstimationPageState#build が呼ばれました');
-    dPrint('frames size = ${widget.frames.length}');
-    dPrint('frames = ${widget.frames}');
 
     if (widget.frames.length != _estimatedImages.length) {
       widget.frames.indexedMap((int i, File frame) async {
@@ -61,31 +61,6 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
           img.copyResize(croppedImage, width: 180, height: 240),
         );
 
-        // // MoveNetで姿勢推定
-        // final pose = await _poseEstimator.estimatePose(croppedImage);
-        //
-        // // 姿勢推定結果を画像に描画（関節や接続線）
-        // final resultImage = await _poseEstimator.drawPoseOnImage(
-        //     croppedImage, pose
-        // );
-        // _estimatedImages.add(resultImage);
-
-        // detectedObjects.indexedMap((int i, DetectedObject detectedObject) async {
-        //   // final croppedImage = detectedObject.cropImage(image);
-        //   final croppedImage = _personDetector.cropImageByBoundingBox(
-        //       image, detectedObject.boundingBox,
-        //   );
-        //
-        //   // MoveNetで姿勢推定
-        //   final pose = await _poseEstimator.estimatePose(croppedImage);
-        //
-        //   // 姿勢推定結果を画像に描画（関節や接続線）
-        //   final resultImage = await _poseEstimator.drawPoseOnImage(
-        //       croppedImage, pose
-        //   );
-        //   _estimatedImages.add(resultImage);
-        // });
-
         if (_estimatedImages.isNotEmpty) {
           dPrint('_estimatedImages : $_estimatedImages');
           setState(() {
@@ -97,6 +72,7 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
       });
     } else {
       _poseEstimator.close();
+      _personDetector.close();
     }
 
     return Scaffold(
