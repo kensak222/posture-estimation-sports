@@ -19,6 +19,7 @@ class PoseEstimationPage extends StatefulWidget {
 
 class _PoseEstimationPageState extends State<PoseEstimationPage> {
   final List<img.Image> _estimatedImages = List.empty(growable: true);
+  bool _isFinish = false;
   late PoseEstimator _poseEstimator;
   late PersonDetector _personDetector;
 
@@ -36,7 +37,7 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
   Widget build(BuildContext context) {
     dPrint('_PoseEstimationPageState#build が呼ばれました');
 
-    if (widget.frames.length != _estimatedImages.length) {
+    if (!_isFinish) {
       widget.frames.indexedMap((int i, File frame) async {
         if (_poseEstimator.isInterpreterNull()) {
           debugPrint('_poseEstimatorの_interpreterがnullなので初期化します');
@@ -52,19 +53,36 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
         final detectedObjects = await _personDetector.detectObjects(image);
 
         // 検出結果に基づいてROIクロッピング
-        final detectedObject = detectedObjects[0];
-        final croppedImage = _personDetector.cropImageByBoundingBox(
-          image,
-          detectedObject.boundingBox,
-        );
-        _estimatedImages.add(
-          img.copyResize(croppedImage, width: 180, height: 240),
+        // final detectedObject = detectedObjects[0];
+        // final croppedImage = _personDetector.cropImageByBoundingBox(
+        //   image,
+        //   detectedObject.boundingBox,
+        // );
+        // _estimatedImages.add(
+        //   img.copyResize(croppedImage, width: 180, height: 240),
+        // );
+
+        final croppedImages = detectedObjects
+            .map((obj) => obj.cropImageByBoundingBox(
+                  image,
+                  obj.boundingBox,
+                ))
+            .toList();
+        _estimatedImages.addAll(
+          croppedImages.map((croppedImage) => img.copyResize(
+                croppedImage,
+                width: 180,
+                height: 240,
+              )),
         );
 
-        if (_estimatedImages.isNotEmpty) {
+        if (_estimatedImages.isNotEmpty && i == widget.frames.length - 1) {
+          dPrint(
+              '_estimatedImages size = ${_estimatedImages.length.toString()}');
           dPrint('_estimatedImages : $_estimatedImages');
           setState(() {
             _estimatedImages;
+            _isFinish = true;
           });
         } else {
           dPrint('_estimatedImages が空です');
@@ -75,18 +93,20 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
       _personDetector.close();
     }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('姿勢推定結果')),
-      body: (_estimatedImages.isEmpty)
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _estimatedImages.length,
-              itemBuilder: (context, index) {
-                return Image.memory(type.Uint8List.fromList(
-                  img.encodePng(_estimatedImages[index]),
-                ));
-              },
-            ),
-    );
+    if (!_isFinish) {
+      return const Center(child: CircularProgressIndicator());
+    } else {
+      return Scaffold(
+        appBar: AppBar(title: const Text('姿勢推定結果')),
+        body: ListView.builder(
+          itemCount: _estimatedImages.length,
+          itemBuilder: (context, index) {
+            return Image.memory(type.Uint8List.fromList(
+              img.encodePng(_estimatedImages[index]),
+            ));
+          },
+        ),
+      );
+    }
   }
 }

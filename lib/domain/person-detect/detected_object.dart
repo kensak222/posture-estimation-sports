@@ -1,5 +1,9 @@
 import 'dart:math';
 
+import 'package:image/image.dart' as img;
+
+import '../../util/utils.dart';
+
 class DetectedObject {
   final int classId; // 物体クラスのID（例えば、人間、車など）
   final double score; // 検出スコア（信頼度）
@@ -51,6 +55,27 @@ class DetectedObject {
 
     // IoUを計算 (重なり面積 / 合計面積)
     return overlapArea / (area1 + area2 - overlapArea);
+  }
+
+  // バウンディングボックスの位置（x, y, width, height）を使用して、クロッピングを行う
+  img.Image cropImageByBoundingBox(img.Image image, List<int> bBox) {
+    dPrint('クロッピングを開始します');
+    final xMin = bBox[0];
+    final yMin = bBox[1];
+    final xMax = bBox[2];
+    final yMax = bBox[3];
+    dPrint('クロッピング結果を出力します '
+        'xMin : $xMin , yMin : $yMin ,'
+        ' width : ${xMax - xMin} , height : ${yMax - yMin}');
+
+    // バウンディングボックス内の領域を切り出して返す
+    return img.copyCrop(
+      image,
+      x: xMin,
+      y: yMin,
+      width: xMax - xMin,
+      height: yMax - yMin,
+    );
   }
 
   // デバッグ用に情報を文字列で表示

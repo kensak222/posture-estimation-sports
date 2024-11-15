@@ -170,27 +170,6 @@ class PersonDetector {
     return finalDetections;
   }
 
-  // バウンディングボックスの位置（x, y, width, height）を使用して、クロッピングを行う
-  img.Image cropImageByBoundingBox(img.Image image, List<int> bBox) {
-    dPrint('クロッピングを開始します');
-    final xMin = bBox[0];
-    final yMin = bBox[1];
-    final xMax = bBox[2];
-    final yMax = bBox[3];
-    dPrint('クロッピング結果を出力します '
-        'xMin : $xMin , yMin : $yMin ,'
-        ' width : ${xMax - xMin} , height : ${yMax - yMin}');
-
-    // バウンディングボックス内の領域を切り出して返す
-    return img.copyCrop(
-      image,
-      x: xMin,
-      y: yMin,
-      width: xMax - xMin,
-      height: yMax - yMin,
-    );
-  }
-
   void close() {
     dPrint('_interpreter のメモリを解放します');
     _interpreter?.close();
