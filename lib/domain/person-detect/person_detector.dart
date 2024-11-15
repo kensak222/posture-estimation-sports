@@ -10,6 +10,7 @@ import 'detected_object.dart';
 class PersonDetector {
   Interpreter? _interpreter;
   final _confidenceThreshold = 0.35;
+  final _iouConfidenceThreshold = 0.5;
 
   PersonDetector() {
     loadModel();
@@ -21,7 +22,7 @@ class PersonDetector {
     final interpreterOptions = InterpreterOptions();
     interpreterOptions.useNnApiForAndroid = true;
     _interpreter = await Interpreter.fromAsset(
-      'assets/ai-model/yolov5x-fp16.tflite',
+      'assets/ai-model/yolov5l-fp16.tflite',
       options: interpreterOptions,
     );
   }
@@ -33,9 +34,9 @@ class PersonDetector {
     dPrint('物体検出を開始します');
 
     final resizedImage = img.copyResize(
-        image, width: 640,
-        height: 640,
-        // fit: img.BoxFit.contain,
+      image, width: 640,
+      height: 640,
+      // fit: img.BoxFit.contain,
     );
     final inputTensor = _prepareInput(resizedImage);
 
@@ -45,6 +46,7 @@ class PersonDetector {
 
     // 推論実行
     _interpreter?.run(inputTensor, output);
+    dPrint('output size = ${output.length}');
     dPrint('output : $output');
     dPrint('物体検出を完了しました');
 
@@ -53,6 +55,7 @@ class PersonDetector {
     detectedObjects.indexedMap((int i, DetectedObject obj) {
       dPrint('Index: $i Value: ${obj.toString()}');
     });
+    dPrint('detectedObjects size = ${detectedObjects.length.toString()}');
     dPrint('detectedObjects : $detectedObjects');
 
     return detectedObjects;
@@ -135,7 +138,36 @@ class PersonDetector {
       }
     }
 
-    return detectedObjects;
+    // NMSを適用して、重複したボックスを排除
+    return _applyNms(detectedObjects, _iouConfidenceThreshold);
+  }
+
+  // 非最大抑制（NMS）を用いて複数のバウンディングボックスが重複して検出されている場合に、
+  // 最も信頼度の高いボックスを選び、その他の重複するボックスを排除する
+  // これにより、誤検出や重複検出を減らし、最終的な結果の精度が向上させたい
+  List<DetectedObject> _applyNms(
+    List<DetectedObject> detectedObjects,
+    double iouThreshold,
+  ) {
+    dPrint('NMSによる重複削除を実施します');
+    detectedObjects.sort((a, b) => b.score.compareTo(a.score)); // スコアが高い順にソート
+
+    List<DetectedObject> finalDetections = [];
+    while (detectedObjects.isNotEmpty) {
+      final current = detectedObjects.removeAt(0);
+      final filteredList = detectedObjects.where((obj) {
+        // IoUが閾値を超える場合は除外
+        return current.intersectionOverUnion(obj) < iouThreshold;
+      }).toList();
+
+      // 最も信頼度の高いボックスを保持
+      finalDetections.add(current);
+
+      // 重複したボックスを除外したリストに更新
+      detectedObjects = filteredList;
+    }
+
+    return finalDetections;
   }
 
   // バウンディングボックスの位置（x, y, width, height）を使用して、クロッピングを行う
