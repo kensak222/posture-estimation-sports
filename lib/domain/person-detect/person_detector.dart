@@ -9,7 +9,7 @@ import 'detected_object.dart';
 
 class PersonDetector {
   Interpreter? _interpreter;
-  final _confidenceThreshold = 0.35;
+  final _confidenceThreshold = 0.45;
   final _iouConfidenceThreshold = 0.5;
 
   PersonDetector() {
@@ -17,7 +17,7 @@ class PersonDetector {
   }
 
   Future<void> loadModel() async {
-    dPrint('_interpreter を初期化します');
+    logger.d('_interpreter を初期化します');
     // YOLOv5のTensorFlow Liteモデルをロード
     final interpreterOptions = InterpreterOptions();
     interpreterOptions.useNnApiForAndroid = true;
@@ -30,13 +30,12 @@ class PersonDetector {
   bool isInterpreterNull() => _interpreter == null;
 
   // 物体検出を行うメソッド
-  Future<List<DetectedObject>> detectObjects(img.Image image) async {
-    dPrint('物体検出を開始します');
+  Future<List<DetectedObject>> detectPersons(img.Image image) async {
+    logger.d('物体検出を開始します');
 
     final resizedImage = img.copyResize(
       image, width: 640,
       height: 640,
-      // fit: img.BoxFit.contain,
     );
     final inputTensor = _prepareInput(resizedImage);
 
@@ -46,24 +45,24 @@ class PersonDetector {
 
     // 推論実行
     _interpreter?.run(inputTensor, output);
-    dPrint('output size = ${output.length}');
-    dPrint('output : $output');
-    dPrint('物体検出を完了しました');
+    logger.d('output size = ${output.length}');
+    logger.d('output : $output');
+    logger.d('物体検出を完了しました');
 
     // 出力結果をパースしてDetectedObjectをリスト化
-    final detectedObjects = _parseOutput(output, image);
-    detectedObjects.indexedMap((int i, DetectedObject obj) {
-      dPrint('Index: $i Value: ${obj.toString()}');
+    final detectedPersons = _parseOutput(output, image);
+    detectedPersons.indexedMap((int i, DetectedObject obj) {
+      logger.d('Index: $i Value: ${obj.toString()}');
     });
-    dPrint('detectedObjects size = ${detectedObjects.length.toString()}');
-    dPrint('detectedObjects : $detectedObjects');
+    logger.d('detectedPersons size = ${detectedPersons.length.toString()}');
+    logger.d('detectedPersons : $detectedPersons');
 
-    return detectedObjects;
+    return detectedPersons;
   }
 
   // 入力を準備する
   List<List<List<List<double>>>> _prepareInput(img.Image image) {
-    dPrint('入力を準備します');
+    logger.d('入力を準備します');
 
     // 画像を640x640にリサイズ
     final resizedImage = img.copyResize(image, width: 640, height: 640);
@@ -103,7 +102,7 @@ class PersonDetector {
     List<List<List<double>>> output,
     img.Image image,
   ) {
-    dPrint('物体を抽出します');
+    logger.d('物体を抽出します');
 
     final imageWidth = image.width;
     final imageHeight = image.height;
@@ -111,7 +110,7 @@ class PersonDetector {
 
     for (var i = 0; i < output[0].length; i++) {
       final obj = output[0][i];
-      if (i % 8000 == 0) dPrint('obj : $obj');
+      if (i % 8000 == 0) logger.d('obj : $obj');
 
       final x = obj[0]; // x座標
       final y = obj[1]; // y座標
@@ -138,8 +137,13 @@ class PersonDetector {
       }
     }
 
-    // NMSを適用して、重複したボックスを排除
-    return _applyNms(detectedObjects, _iouConfidenceThreshold);
+    // Person の検出だけに絞り込みつつ、NMSを適用して重複したボックスを排除
+    return _applyNms(
+        detectedObjects.where(
+                (obj) => obj.getClassName() == DetectedObject.person
+        ).toList(),
+        _iouConfidenceThreshold,
+    );
   }
 
   // 非最大抑制（NMS）を用いて複数のバウンディングボックスが重複して検出されている場合に、
@@ -149,7 +153,7 @@ class PersonDetector {
     List<DetectedObject> detectedObjects,
     double iouThreshold,
   ) {
-    dPrint('NMSによる重複削除を実施します');
+    logger.d('NMSによる重複削除を実施します');
     detectedObjects.sort((a, b) => b.score.compareTo(a.score)); // スコアが高い順にソート
 
     List<DetectedObject> finalDetections = [];
@@ -171,7 +175,7 @@ class PersonDetector {
   }
 
   void close() {
-    dPrint('_interpreter のメモリを解放します');
+    logger.d('_interpreter のメモリを解放します');
     _interpreter?.close();
   }
 }

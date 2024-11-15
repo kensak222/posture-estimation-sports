@@ -8,6 +8,7 @@ class DetectedObject {
   final int classId; // 物体クラスのID（例えば、人間、車など）
   final double score; // 検出スコア（信頼度）
   final List<int> boundingBox; // バウンディングボックスの座標 [xMin, yMin, xMax, yMax]
+  static String person = 'Person';
 
   DetectedObject({
     required this.classId,
@@ -19,7 +20,7 @@ class DetectedObject {
   String getClassName() {
     switch (classId) {
       case 0:
-        return 'Person';
+        return person;
       case 1:
         return 'Car';
       case 2:
@@ -59,12 +60,12 @@ class DetectedObject {
 
   // バウンディングボックスの位置（x, y, width, height）を使用して、クロッピングを行う
   img.Image cropImageByBoundingBox(img.Image image, List<int> bBox) {
-    dPrint('クロッピングを開始します');
+    logger.d('クロッピングを開始します');
     final xMin = bBox[0];
     final yMin = bBox[1];
     final xMax = bBox[2];
     final yMax = bBox[3];
-    dPrint('クロッピング結果を出力します '
+    logger.d('クロッピング結果を出力します '
         'xMin : $xMin , yMin : $yMin ,'
         ' width : ${xMax - xMin} , height : ${yMax - yMin}');
 
