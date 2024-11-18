@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:posture_estimation_sports/domain/pose-estimation/pose_estimator.dart';
 import 'package:image/image.dart' as img;
 
-import '../../domain/person-detect/person_detector.dart';
 import '../../util/utils.dart';
 
 class PoseEstimationPage extends StatefulWidget {
@@ -21,7 +20,6 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
   final List<img.Image> _estimatedImages = List.empty(growable: true);
   bool _isFinish = false;
   late PoseEstimator _poseEstimator;
-  late PersonDetector _personDetector;
 
   @override
   void initState() {
@@ -30,7 +28,6 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
     logger.d('frames = ${widget.frames}');
     super.initState();
     _poseEstimator = PoseEstimator();
-    _personDetector = PersonDetector();
   }
 
   @override
@@ -43,38 +40,14 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
           debugPrint('_poseEstimatorの_interpreterがnullなので初期化します');
           await _poseEstimator.loadModel();
         }
-        if (_personDetector.isInterpreterNull()) {
-          debugPrint('_personDetectorの_interpreterがnullなので初期化します');
-          await _personDetector.loadModel();
-        }
+
         debugPrint('$i回目の推論を行います');
         final image = img.decodeImage(frame.readAsBytesSync())!;
-        // YOLOで物体検出
-        final detectedObjects = await _personDetector.detectPersons(image);
-
-        // 検出結果に基づいてROIクロッピング
-        // final detectedObject = detectedObjects[0];
-        // final croppedImage = _personDetector.cropImageByBoundingBox(
-        //   image,
-        //   detectedObject.boundingBox,
-        // );
-        // _estimatedImages.add(
-        //   img.copyResize(croppedImage, width: 180, height: 240),
-        // );
-
-        final croppedImages = detectedObjects
-            .map((obj) => obj.cropImageByBoundingBox(
-                  image,
-                  obj.boundingBox,
-                ))
-            .toList();
-        _estimatedImages.addAll(
-          croppedImages.map((croppedImage) => img.copyResize(
-                croppedImage,
-                width: 180,
-                height: 240,
-              )),
-        );
+        // 姿勢推定を実行
+        final poseData = await _poseEstimator.estimatePose(image);
+        final overlayImage = await _poseEstimator
+            .drawPoseOnImage(image, poseData,);
+        _estimatedImages.add(overlayImage);
 
         if (_estimatedImages.isNotEmpty && i == widget.frames.length - 1) {
           logger.d(
@@ -90,7 +63,6 @@ class _PoseEstimationPageState extends State<PoseEstimationPage> {
       });
     } else {
       _poseEstimator.close();
-      _personDetector.close();
     }
 
     if (!_isFinish) {
