@@ -5,7 +5,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:posture_estimation_sports/util/utils.dart';
 
-class VideoPicker {
+class VideoPickerService {
+  Future<List<File>> pickAndExtractFrames() async {
+    logger.d('動画を選択しフレームを抽出します');
+    final video = await pickVideo();
+    if (video != null) {
+      final frames = await extractFrames(video);
+      logger.d('フレームの抽出に成功しました frames : $frames');
+      return frames;
+    }
+    logger.d('フレームの抽出に失敗しました');
+    return List.empty();
+  }
 
   Future<String?> pickVideo() async {
     final picker = ImagePicker();
