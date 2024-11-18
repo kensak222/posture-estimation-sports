@@ -1,9 +1,19 @@
 import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:posture_estimation_sports/util/utils.dart';
+
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'video_picker_service.g.dart';
+
+@riverpod
+VideoPickerService videoPickerService(Ref ref) {
+  return VideoPickerService(); // ここでDIコンテナに登録される
+}
 
 class VideoPickerService {
   Future<List<File>> pickAndExtractFrames() async {
@@ -45,8 +55,8 @@ class VideoPickerService {
     if (returnCode?.isValueSuccess() == true) {
       logger.d('フレーム抽出に成功しました');
       // 生成された画像ファイルをリストで取得
-      final frameFiles = Directory(outputDir)
-          .listSync().whereType<File>().toList();
+      final frameFiles =
+          Directory(outputDir).listSync().whereType<File>().toList();
       return frameFiles;
     } else {
       logger.d('フレーム抽出に失敗しました');

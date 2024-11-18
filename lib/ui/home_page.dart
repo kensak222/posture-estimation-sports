@@ -14,11 +14,12 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     logger.d('HomePage#build が呼ばれました');
     // videoPickerProvider の状態を監視
-    final videoPickerState = ref.watch(videoPickerProvider);
+    final videoPickerState = ref.watch(videoPickerNotifierProvider);
 
     // ref.listen を使って videoPickerState の変化を監視し、遷移を処理
     // 状態が変更されたときに一度だけ反応するのみで要件的には必要十分
-    ref.listen<AsyncValue<List<File>>>(videoPickerProvider, (previous, next) {
+    ref.listen<AsyncValue<List<File>>>(videoPickerNotifierProvider,
+        (previous, next) {
       next.when(
         data: (frames) {
           // フレームのデータが取得できた場合、遷移を試みる
@@ -44,16 +45,19 @@ class HomePage extends ConsumerWidget {
       body: Center(
         child: videoPickerState.when(
           data: (frames) {
-            logger.d('フレームデータ: $frames');
-            return OutlinedButton(
-              onPressed: () async {
-                logger.d('読み込みたい動画を選択 ボタンがタップされました');
-                await ref
-                    .read(videoPickerProvider.notifier)
-                    .pickAndProcessVideo();
-              },
-              child: const Text('読み込みたい動画を選択'),
-            );
+            if (frames.isEmpty) {
+              return OutlinedButton(
+                onPressed: () async {
+                  logger.d('読み込みたい動画を選択 ボタンがタップされました');
+                  await ref
+                      .read(videoPickerNotifierProvider.notifier)
+                      .pickAndProcessVideo();
+                },
+                child: const Text('読み込みたい動画を選択'),
+              );
+            } else {
+              return const CircularProgressIndicator();
+            }
           },
           loading: () => const CircularProgressIndicator(),
           error: (error, stack) => Text('エラー: $error'),
