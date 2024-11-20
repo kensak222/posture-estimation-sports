@@ -12,6 +12,7 @@ class VideoPickerNotifier extends _$VideoPickerNotifier {
   @override
   FutureOr<List<File>> build() {
     _videoPickerService = ref.watch(videoPickerServiceProvider);
+    state = const AsyncValue.loading();
     return List.empty();
   }
 
