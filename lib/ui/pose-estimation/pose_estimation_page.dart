@@ -21,9 +21,6 @@ class PoseEstimationPageState extends ConsumerState<PoseEstimationPage> {
     logger.d('PoseEstimationPage#initState が呼ばれました');
     super.initState();
     // 画面遷移時に一度だけ姿勢推定を行う
-    // ref
-    //     .read(poseEstimationNotifierProvider.notifier)
-    //     .estimatePose(widget.frames);
     Future.microtask(() {
       ref
           .read(poseEstimationNotifierProvider.notifier)
