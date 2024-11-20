@@ -4,7 +4,7 @@ final logger = Logger(
   printer: PrettyPrinter(),
 );
 
-extension IndexedMap<T, E> on List<T> {
+extension IndexedMap<T, Element> on List<T> {
   List<E> indexedMap<E>(E Function(int index, T item) function) {
     final list = <E>[];
     asMap().forEach((index, element) {

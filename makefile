@@ -48,7 +48,7 @@ build:
 
 # Format the code (flutter format)
 format:
-	$(FVM_FLUTTER) format .
+	dart format lib/
 
 # Analyze the code (flutter analyze)
 analyze:

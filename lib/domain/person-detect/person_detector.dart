@@ -34,7 +34,8 @@ class PersonDetector {
     logger.d('物体検出を開始します');
 
     final resizedImage = img.copyResize(
-      image, width: 640,
+      image,
+      width: 640,
       height: 640,
     );
     final inputTensor = _prepareInput(resizedImage);
@@ -139,10 +140,10 @@ class PersonDetector {
 
     // Person の検出だけに絞り込みつつ、NMSを適用して重複したボックスを排除
     return _applyNms(
-        detectedObjects.where(
-                (obj) => obj.getClassName() == DetectedObject.person
-        ).toList(),
-        _iouConfidenceThreshold,
+      detectedObjects
+          .where((obj) => obj.getClassName() == DetectedObject.person)
+          .toList(),
+      _iouConfidenceThreshold,
     );
   }
 
