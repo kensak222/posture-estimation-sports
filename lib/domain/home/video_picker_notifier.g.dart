@@ -7,7 +7,7 @@ part of 'video_picker_notifier.dart';
 // **************************************************************************
 
 String _$videoPickerNotifierHash() =>
-    r'f809ac67e8103bc91f33c379edd00ed4abd407a3';
+    r'c5ffda4c8eeb258e5a5d9cf4c13f7e8bb970c469';
 
 /// See also [VideoPickerNotifier].
 @ProviderFor(VideoPickerNotifier)

@@ -1,12 +1,20 @@
 import 'dart:typed_data';
 
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
 import '../../util/utils.dart';
-import 'estimator.dart';
 
-class PoseEstimator extends Estimator {
+part 'pose_estimation_service.g.dart';
+
+@riverpod
+PoseEstimationService poseEstimationService(Ref ref) {
+  return PoseEstimationService(); // インスタンスを提供
+}
+
+class PoseEstimationService {
   Interpreter? _interpreter;
 
   // MoveNetの関節の接続情報（親子関係）
@@ -20,11 +28,6 @@ class PoseEstimator extends Estimator {
   ];
   final _confidenceThreshold = 0.45;
 
-  PoseEstimator() {
-    loadModel();
-  }
-
-  @override
   Future<void> loadModel() async {
     logger.d('_interpreter を初期化します');
     final interpreterOptions = InterpreterOptions();
@@ -37,8 +40,8 @@ class PoseEstimator extends Estimator {
 
   bool isInterpreterNull() => _interpreter == null;
 
-  @override
-  Future<List<List<List<List<double>>>>> estimatePose(img.Image image) async {
+  Future<(img.Image, List<List<List<List<double>>>>)> estimatePose(
+      img.Image image) async {
     logger.d('姿勢推定を実行します');
 
     if (image.width == 0 || image.height == 0) {
@@ -93,50 +96,7 @@ class PoseEstimator extends Estimator {
           );
     }
 
-    return output;
-  }
-
-  // ROI部分を使って姿勢推定
-  Future<List<List<List<List<double>>>>> estimatePoseRoi(
-    img.Image image,
-    List<int> roi,
-  ) async {
-    // ROIで画像をクロップ
-    img.Image croppedImage = img.copyCrop(
-      image,
-      x: roi[0],
-      y: roi[1],
-      width: roi[2] - roi[0],
-      height: roi[3] - roi[1],
-    );
-
-    // 画像をモデルに合わせたサイズにリサイズ (256x256に変更)
-    final resizedImage = img.copyResize(croppedImage, width: 256, height: 256);
-
-    // 画像のRGB値を取得
-    final imageBytes = resizedImage.getBytes();
-
-    // 正規化処理
-    final inputTensor = Uint8List(256 * 256 * 3);
-    for (int i = 0; i < imageBytes.length; i++) {
-      inputTensor[i] = imageBytes[i];
-    }
-
-    final reshapedInput = inputTensor.reshape([1, 256, 256, 3]);
-
-    final output = List.generate(
-        1,
-        (_) => List.generate(
-            1, (_) => List.generate(17, (_) => List.filled(3, 0.0))));
-
-    // 推論実行
-    try {
-      _interpreter?.run(reshapedInput, output);
-    } catch (e) {
-      logger.d('推論実行中にエラーが発生しました: $e');
-    }
-
-    return output;
+    return (image, output);
   }
 
   // 姿勢推定結果を画像に反映
@@ -198,7 +158,6 @@ class PoseEstimator extends Estimator {
   }
 
   // メモリ解放
-  @override
   void close() {
     logger.d('_interpreter のメモリを解放します');
     _interpreter?.close();
