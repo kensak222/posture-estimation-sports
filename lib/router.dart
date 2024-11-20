@@ -15,10 +15,8 @@ final router = GoRouter(
 );
 
 @TypedGoRoute<HomeRoute>(
-    path: '/ui',
-    routes: [
-      TypedGoRoute<PoseEstimationRoute>(path: 'ui/pose-estimation')
-    ],
+  path: '/ui',
+  routes: [TypedGoRoute<PoseEstimationRoute>(path: 'ui/pose-estimation')],
 )
 class HomeRoute extends GoRouteData {
   const HomeRoute();
