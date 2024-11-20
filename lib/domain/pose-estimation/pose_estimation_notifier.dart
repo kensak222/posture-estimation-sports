@@ -23,7 +23,7 @@ class PoseEstimationNotifier extends _$PoseEstimationNotifier {
     state = const AsyncValue.loading();
     logger.d('姿勢推定を実行します frames : $frames');
     if (_poseEstimationService.isInterpreterNull()) {
-      _poseEstimationService.loadModel();
+      await _poseEstimationService.loadModel();
     }
 
     try {
