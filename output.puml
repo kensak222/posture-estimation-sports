@@ -1,0 +1,99 @@
+@startuml
+class VideoPickerNotifier {
+---
+-videoPickerService: VideoPickerService
+build(): FutureOr<File[0..*]
+pickAndProcessVideo(): void
+}
+_$VideoPickerNotifier <|-- VideoPickerNotifier
+VideoPickerNotifier ..> VideoPickerService
+class VideoPickerService {
+---
+pickAndExtractFrames(): File[0..*]
+pickVideo(): String?
+extractFrames(): File[0..*]
+}
+class DetectedObject {
+---
+classId: int
+score: double
+boundingBox: List<int>
+person: String
+getClassName(): String
+area(): int
+intersectionOverUnion(): double
+cropImageByBoundingBox(): img.Image
+toString(): String
+}
+class PersonDetector {
+---
+-interpreter: Interpreter?
+-confidenceThreshold: null
+-iouConfidenceThreshold: null
+loadModel(): void
+isInterpreterNull(): bool
+detectPersons(): DetectedObject[0..*]
+-_prepareInput(): ListListListdouble[0..*]
+-_parseOutput(): DetectedObject[0..*]
+-_applyNms(): DetectedObject[0..*]
+close(): void
+}
+PersonDetector ..> Interpreter
+class PoseEstimationNotifier {
+---
+-poseEstimationService: PoseEstimationService
+build(): FutureOr<img.Image[0..*]
+estimatePose(): void
+}
+_$PoseEstimationNotifier <|-- PoseEstimationNotifier
+PoseEstimationNotifier ..> PoseEstimationService
+class PoseEstimationService {
+---
+-interpreter: Interpreter?
+poseConnections: List<List<int>>
+-confidenceThreshold: null
+loadModel(): void
+isInterpreterNull(): bool
+estimatePose(): (img.Image, ListListListdouble[0..*])
+drawPoseOnImage(): img.Image
+close(): void
+}
+PoseEstimationService ..> Interpreter
+class MyApp {
+---
+build(): Widget
+}
+StatelessWidget <|-- MyApp
+class HomeRoute {
+---
+build(): Widget
+}
+GoRouteData <|-- HomeRoute
+class PoseEstimationRoute {
+---
+$extra: List<File>
+build(): Widget
+}
+GoRouteData <|-- PoseEstimationRoute
+class VideoState {
+---
+}
+ChangeNotifier <|-- VideoState
+class HomePage {
+---
+build(): Widget
+}
+ConsumerWidget <|-- HomePage
+class PoseEstimationPage {
+---
+frames: List<File>
+createState(): PoseEstimationPageState
+}
+ConsumerStatefulWidget <|-- PoseEstimationPage
+class PoseEstimationPageState {
+---
+initState(): void
+build(): Widget
+}
+ConsumerState <|-- PoseEstimationPageState
+@enduml
