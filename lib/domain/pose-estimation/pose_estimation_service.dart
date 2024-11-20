@@ -56,8 +56,7 @@ class PoseEstimationService {
 
     // 画像のRGB値を取得
     final imageBytes = resizedImage.getBytes();
-
-    logger.d('画像を正規化します');
+    logger.d('画像を正規化します imageBytes : $imageBytes');
     // 正規化処理: [0, 255]の範囲のピクセル値を[0.0, 1.0]に正規化
     // ここで、0〜255の範囲に正規化した整数を使う必要があります。
     final inputTensor = Uint8List(256 * 256 * 3);
