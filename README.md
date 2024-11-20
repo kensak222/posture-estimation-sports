@@ -50,9 +50,9 @@ make run
 - **Flutter**: クロスプラットフォームのアプリケーションフレームワーク
 - **Dart**: Flutterのプログラミング言語
 - **FFmpeg**: 動画から画像を抽出するためのライブラリ（プラグイン利用）
-- **MoveNet** : 姿勢推定を行うためのライブラリ（TensorFlow LiteやFlutter用のパッケージ）
+- **MoveNet**: 姿勢推定を行うためのモデル
 - **flutter_ffmpeg**: 動画処理を行うためのFlutter用FFmpegプラグイン
-- **tflite_flutter** または **mediapipe**: 姿勢推定を行うためのFlutter用ライブラリ
+- **tflite_flutter**: 姿勢推定を行うためのFlutter用ライブラリ
 - **riverpod**: 状態管理を行うためのFlutter用ライブラリ
 
 ## 動作の流れ
