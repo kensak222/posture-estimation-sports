@@ -90,6 +90,15 @@ make run
 ```bash
 #!/bin/bash
 
+# 現在のブランチ名を取得
+current_branch=$(git symbolic-ref --short HEAD)
+
+# 'main' ブランチに対するコミットを拒否
+if [ "$current_branch" == "main" ]; then
+  echo "Error: You cannot commit directly to the 'main' branch."
+  exit 1  # コミットを中止
+fi
+
 # make analyze を実行して、エラーがあればコミットを中止
 echo "Running 'make analyze' before commit..."
 make format
