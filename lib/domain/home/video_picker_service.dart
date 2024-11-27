@@ -32,7 +32,7 @@ class VideoPickerService {
     final picker = ImagePicker();
     final video = await picker.pickVideo(source: ImageSource.gallery);
     if (video != null) {
-      logger.d('videoPath の取得に成功しました');
+      logger.d('videoPath の取得に成功しました videoPath : $video');
       return video.path;
     }
     logger.d('videoPath の取得に失敗しました');

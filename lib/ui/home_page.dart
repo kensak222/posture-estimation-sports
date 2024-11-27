@@ -19,30 +19,27 @@ class HomePage extends ConsumerWidget {
     // ref.listen を使って videoPickerState の変化を監視し、遷移を処理
     // 状態が変更されたときに一度だけ反応するのみで要件的には必要十分
     ref.listen<AsyncValue<List<File>>>(videoPickerNotifierProvider,
-            (previous, next) {
-          next.when(
-            data: (frames) {
-              // フレームのデータが取得できた場合、遷移を試みる
-              if (frames.isNotEmpty) {
-                logger.d('姿勢推定画面に遷移します');
-                PoseEstimationRoute($extra: frames).go(context);
-              }
-            },
-            loading: () {
-              logger.d('フレーム抽出中...');
-            },
-            error: (error, stack) {
-              logger.e('エラーが発生しました: $error');
-            },
-          );
-        });
+        (previous, next) {
+      next.when(
+        data: (frames) {
+          // フレームのデータが取得できた場合、遷移を試みる
+          if (frames.isNotEmpty) {
+            logger.d('姿勢推定画面に遷移します');
+            PoseEstimationRoute($extra: frames).go(context);
+          }
+        },
+        loading: () {
+          logger.d('フレーム抽出中...');
+        },
+        error: (error, stack) {
+          logger.e('エラーが発生しました: $error');
+        },
+      );
+    });
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: const Text('Flutter Demo Home Page'),
       ),
       body: Center(
@@ -50,24 +47,25 @@ class HomePage extends ConsumerWidget {
           data: (frames) {
             if (frames.isEmpty) {
               return Column(
-                  children: [
-                    OutlinedButton(
-                      onPressed: () async {
-                        logger.d('端末上で姿勢推定 ボタンがタップされました');
-                        await ref
-                            .read(videoPickerNotifierProvider.notifier)
-                            .pickAndProcessVideo();
-                      },
-                      child: const Text('端末上で姿勢推定'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        logger.d('サーバ上で姿勢推定 ボタンがタップされました');
-                        const PostureEstimationPageRoute().go(context);
-                      },
-                      child: const Text('サーバ上で姿勢推定'),
-                    ),
-                  ].withSpaceBetween(height: 20),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  OutlinedButton(
+                    onPressed: () async {
+                      logger.d('端末上で姿勢推定 ボタンがタップされました');
+                      await ref
+                          .read(videoPickerNotifierProvider.notifier)
+                          .pickAndProcessVideo();
+                    },
+                    child: const Text('端末上で姿勢推定'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () {
+                      logger.d('サーバ上で姿勢推定 ボタンがタップされました');
+                      const PostureEstimationPageRoute().go(context);
+                    },
+                    child: const Text('サーバ上で姿勢推定'),
+                  ),
+                ].withSpaceBetween(height: 20),
               );
             } else {
               return const CircularProgressIndicator();

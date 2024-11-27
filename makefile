@@ -73,7 +73,7 @@ activate-lib:
 
 # generate g files
 auto-generate:
-	$(FVM_FLUTTER) pub run build_runner build
+	$(FVM_FLUTTER) pub run build_runner build --delete-conflicting-outputs
 
 # Generate UML class diagram (code_uml)
 # クラスを自動生成する場合は、https://github.com/chashkovdaniil/graph_analyzer/ を参考に、
