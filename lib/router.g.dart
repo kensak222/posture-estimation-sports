@@ -18,6 +18,10 @@ RouteBase get $homeRoute => GoRouteData.$route(
           path: 'ui/pose-estimation',
           factory: $PoseEstimationRouteExtension._fromState,
         ),
+        GoRouteData.$route(
+          path: 'ui/pose-estimation-network',
+          factory: $PostureEstimationPageRouteExtension._fromState,
+        ),
       ],
     );
 
@@ -58,4 +62,22 @@ extension $PoseEstimationRouteExtension on PoseEstimationRoute {
 
   void replace(BuildContext context) =>
       context.replace(location, extra: $extra);
+}
+
+extension $PostureEstimationPageRouteExtension on PostureEstimationPageRoute {
+  static PostureEstimationPageRoute _fromState(GoRouterState state) =>
+      const PostureEstimationPageRoute();
+
+  String get location => GoRouteData.$location(
+        '/ui/ui/pose-estimation-network',
+      );
+
+  void go(BuildContext context) => context.go(location);
+
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  void replace(BuildContext context) => context.replace(location);
 }
