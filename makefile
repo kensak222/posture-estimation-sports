@@ -71,6 +71,10 @@ add-lib:
 activate-lib:
 	dart pub global activate $(lib)
 
+# generate g files
+auto-generate:
+	$(FVM_FLUTTER) pub run build_runner build
+
 # Generate UML class diagram (code_uml)
 # クラスを自動生成する場合は、https://github.com/chashkovdaniil/graph_analyzer/ を参考に、
 # <your_path_to_dir_input> と <your_path_to_dir_output> を各自にあったものに変更してください
