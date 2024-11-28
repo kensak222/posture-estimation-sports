@@ -13,6 +13,7 @@ class VideoPlayerScreen extends HookWidget {
   Widget build(BuildContext context) {
     logger.d("動画再生を開始します videoPath : $videoPath");
 
+    // 動画コントローラーを作成（ネットワークから動画を取得）
     final controller = useMemoized(
         () => VideoPlayerController.networkUrl(Uri.parse(videoPath)));
     final initialized = useState(false);
@@ -21,44 +22,60 @@ class VideoPlayerScreen extends HookWidget {
     useEffect(() {
       controller.initialize().then((_) {
         initialized.value = true;
-        // 初期化完了後に自動で再生
+        // 初期化後に自動再生
         controller.play();
       });
+
+      // 動画再生状態の変更を監視
       controller.addListener(() {
-        // 再生状態の変更を監視する
         if (controller.value.isPlaying != isPlaying.value) {
           isPlaying.value = controller.value.isPlaying;
         }
       });
+
+      // ウィジェット破棄時にコントローラーを解放
       return controller.dispose;
     }, [controller]);
 
+    // 動画が初期化されるまでロード中インジケーターを表示
     if (!initialized.value) {
       return const Center(child: CircularProgressIndicator());
     }
 
     return Stack(
       children: [
-        AspectRatio(
-          aspectRatio: controller.value.aspectRatio,
-          child: VideoPlayer(controller),
+        // 動画プレーヤーを中央に表示
+        Center(
+          child: AspectRatio(
+            aspectRatio: controller.value.aspectRatio,
+            child: VideoPlayer(controller),
+          ),
         ),
-        // 再生していない場合に再生ボタンを表示
-        if (!isPlaying.value)
-          Center(
-            child: IconButton(
-              icon: const Icon(
-                Icons.play_arrow,
-                size: 64,
-                color: Colors.black,
-              ),
-              onPressed: () {
-                logger.d('再生ボタンがタップされました');
-                controller.play();
-                isPlaying.value = true;
-              },
+        // 動画を再生していない場合にオーバーレイを追加
+        if (!isPlaying.value) ...[
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.6), // 半透明の黒
             ),
           ),
+          // 再生ボタンを動画の上部に配置
+          Positioned(
+            child: Center(
+              child: IconButton(
+                icon: const Icon(
+                  Icons.play_arrow,
+                  size: 64,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  logger.d('再生ボタンがタップされました');
+                  controller.play(); // 再生開始
+                  isPlaying.value = true; // 再生状態を更新
+                },
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
