@@ -7,7 +7,7 @@ part of 'pose_estimation_notifier.dart';
 // **************************************************************************
 
 String _$poseEstimationNotifierHash() =>
-    r'1e4328bba302814344d9949fc74fb35e7d7cd24a';
+    r'33692d9bd0171744ebe30bc3de9d81546793b624';
 
 /// PoseEstimator を提供する StateNotifier
 ///

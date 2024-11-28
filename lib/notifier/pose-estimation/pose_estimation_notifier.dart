@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../util/utils.dart';
-import 'pose_estimation_service.dart';
+import '../../domain/pose-estimation/pose_estimation_service.dart';
 import 'package:image/image.dart' as img;
 
 part 'pose_estimation_notifier.g.dart';
