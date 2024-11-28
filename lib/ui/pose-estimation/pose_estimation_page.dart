@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:posture_estimation_sports/domain/pose-estimation/pose_estimation_notifier.dart';
+import 'package:posture_estimation_sports/notifier/pose-estimation/pose_estimation_notifier.dart';
 import 'package:image/image.dart' as img;
 
 import '../../util/utils.dart';

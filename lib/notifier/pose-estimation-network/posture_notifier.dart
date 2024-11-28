@@ -44,6 +44,7 @@ class PostureNotifier extends StateNotifier<PostureState> {
 
   Future<void> processVideo(String videoPath) async {
     try {
+      logger.d("processedVideoPathの取得に成功しました : $videoPath");
       state = const PostureState.processing();
       final processedVideoPath =
           await _postureEstimationService.processVideo(videoPath);

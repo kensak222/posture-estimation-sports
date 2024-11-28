@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:posture_estimation_sports/router.dart';
+import 'package:posture_estimation_sports/ui/home/home_buttons.dart';
 import 'package:posture_estimation_sports/util/utils.dart';
 
-import '../domain/home/video_picker_notifier.dart';
+import '../../notifier/home/video_picker_notifier.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -49,30 +50,43 @@ class HomePage extends ConsumerWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  OutlinedButton(
-                    onPressed: () async {
+                  HomeButtons(
+                    onDeviceEstimationPressed: () async {
                       logger.d('端末上で姿勢推定 ボタンがタップされました');
                       await ref
                           .read(videoPickerNotifierProvider.notifier)
                           .pickAndProcessVideo();
                     },
-                    child: const Text('端末上で姿勢推定'),
-                  ),
-                  OutlinedButton(
-                    onPressed: () {
+                    onServerEstimationPressed: () {
                       logger.d('サーバ上で姿勢推定 ボタンがタップされました');
                       const PostureEstimationPageRoute().go(context);
                     },
-                    child: const Text('サーバ上で姿勢推定'),
                   ),
-                ].withSpaceBetween(height: 20),
+                ],
               );
             } else {
               return const CircularProgressIndicator();
             }
           },
           loading: () => const CircularProgressIndicator(),
-          error: (error, stack) => Text('エラー: $error'),
+          error: (error, stack) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("エラー $error"),
+              HomeButtons(
+                onDeviceEstimationPressed: () async {
+                  logger.d('端末上で姿勢推定 ボタンがタップされました');
+                  await ref
+                      .read(videoPickerNotifierProvider.notifier)
+                      .pickAndProcessVideo();
+                },
+                onServerEstimationPressed: () {
+                  logger.d('サーバ上で姿勢推定 ボタンがタップされました');
+                  const PostureEstimationPageRoute().go(context);
+                },
+              ),
+            ].withSpaceBetween(height: 20),
+          ),
         ),
       ),
     );

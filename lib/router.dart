@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:posture_estimation_sports/ui/home_page.dart';
+import 'package:posture_estimation_sports/ui/home/home_page.dart';
 import 'package:posture_estimation_sports/ui/pose-estimation-network/posture_estimation_page.dart';
 import 'package:posture_estimation_sports/ui/pose-estimation/pose_estimation_page.dart';
 
